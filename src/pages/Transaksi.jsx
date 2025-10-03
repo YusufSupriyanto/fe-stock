@@ -7,6 +7,7 @@ export default function Transaksi() {
     const [data, setData] = useState([]);
     const [produk, setProduk] = useState([]);
     const [showModal, setShowModal] = useState(false);
+    const [errorMessage, setErrorMessage] = useState("");
     const [form, setForm] = useState({
         jenis: "in",
         items: [{ produk_id: "", jumlah: 0 }]
@@ -61,9 +62,15 @@ export default function Transaksi() {
             await createTransaksi(form);
             setShowModal(false);
             setForm({ jenis: "in", items: [{ produk_id: "", jumlah: 0 }] });
+            setErrorMessage("");
             fetchData();
         } catch (err) {
             console.error(err);
+            if (err.response && err.response.data) {
+                setErrorMessage(err.response.data.message);
+            } else {
+                setErrorMessage("Terjadi kesalahan, coba lagi.");
+            }
         }
     };
 
@@ -112,13 +119,12 @@ export default function Transaksi() {
                                 <td>
                                     {trx.items.reduce((sum, i) => sum + Number(i.stock_after), 0)}
                                 </td>
-
                                 <td>{new Date(trx.created_at).toLocaleString()}</td>
                             </tr>
                         ))}
                         {data.length === 0 && (
                             <tr>
-                                <td colSpan={6} className="text-center">Tidak ada data</td>
+                                <td colSpan={7} className="text-center">Tidak ada data</td>
                             </tr>
                         )}
                         </tbody>
@@ -131,6 +137,14 @@ export default function Transaksi() {
                 <dialog open className="modal">
                     <div className="modal-box max-w-2xl">
                         <h2 className="font-bold text-lg mb-4">Tambah Transaksi</h2>
+
+                        {/* Tampilkan error */}
+                        {errorMessage && (
+                            <div className="alert alert-error mb-3">
+                                <span>{errorMessage}</span>
+                            </div>
+                        )}
+
                         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
                             <select
                                 name="jenis"
@@ -166,7 +180,13 @@ export default function Transaksi() {
                                         required
                                     />
                                     {form.items.length > 1 && (
-                                        <button type="button" className="btn btn-error btn-sm" onClick={() => removeItem(index)}>X</button>
+                                        <button
+                                            type="button"
+                                            className="btn btn-error btn-sm"
+                                            onClick={() => removeItem(index)}
+                                        >
+                                            X
+                                        </button>
                                     )}
                                 </div>
                             ))}
